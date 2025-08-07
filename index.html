@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chucky X Bot Stats</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --neon-blue: #0ff0fc;
+      --neon-purple: #9600ff;
+      --dark-bg: #0a0a12;
+      --darker-bg: #050508;
+      --text-color: #e0e0e0;
+      --glow: 0 0 10px var(--neon-blue), 0 0 20px var(--neon-blue), 0 0 30px var(--neon-blue);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Courier New', monospace;
+    }
+
+    body {
+      background-color: var(--dark-bg);
+      color: var(--text-color);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(15, 240, 252, 0.05) 0%, transparent 20%),
+        radial-gradient(circle at 90% 80%, rgba(150, 0, 255, 0.05) 0%, transparent 20%);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        linear-gradient(0deg, transparent 0%, var(--darker-bg) 100%),
+        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path fill="none" stroke="%230ff0fc" stroke-width="0.3" stroke-opacity="0.2" d="M0,0 L100,100 M100,0 L0,100"/></svg>');
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    .parallax-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      opacity: 0.3;
+    }
+
+    .parallax-element {
+      position: absolute;
+      background: rgba(15, 240, 252, 0.1);
+      border: 1px solid var(--neon-blue);
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 2rem;
+      color: var(--neon-blue);
+      text-shadow: var(--glow);
+      font-size: 2.5rem;
+      position: relative;
+      display: inline-block;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 0 1rem;
+      animation: pulse 2s infinite alternate;
+    }
+
+    h1::after {
+      content: "";
+      position: absolute;
+      bottom: -10px;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: var(--neon-blue);
+      box-shadow: var(--glow);
+      transform: scaleX(0);
+      transform-origin: right;
+      animation: underline 3s infinite;
+    }
+
+    .stats-container {
+      background: rgba(10, 10, 20, 0.8);
+      border: 1px solid var(--neon-blue);
+      border-radius: 5px;
+      padding: 2rem;
+      box-shadow: 0 0 20px rgba(15, 240, 252, 0.3);
+      backdrop-filter: blur(5px);
+      transform: perspective(500px) rotateX(5deg);
+      transition: all 0.3s ease;
+      margin-top: 2rem;
+    }
+
+    .stats-container:hover {
+      box-shadow: 0 0 30px rgba(15, 240, 252, 0.5);
+      transform: perspective(500px) rotateX(0deg);
+    }
+
+    .stat-item {
+      margin: 1.5rem 0;
+      font-size: 1.2rem;
+      position: relative;
+      padding-left: 2rem;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.5s forwards;
+    }
+
+    .stat-item:nth-child(1) { animation-delay: 0.3s; }
+    .stat-item:nth-child(2) { animation-delay: 0.6s; }
+    .stat-item:nth-child(3) { animation-delay: 0.9s; }
+
+    .stat-item::before {
+      content: ">";
+      position: absolute;
+      left: 0;
+      color: var(--neon-blue);
+      font-weight: bold;
+    }
+
+    .stat-value {
+      color: var(--neon-blue);
+      font-weight: bold;
+      text-shadow: 0 0 5px var(--neon-blue);
+      transition: all 0.3s ease;
+    }
+
+    .credits {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      font-size: 0.8rem;
+      color: var(--neon-blue);
+      opacity: 0.7;
+    }
+
+    .loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--dark-bg);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      transition: opacity 0.5s, visibility 0.5s;
+    }
+
+    .loader.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .loader-circle {
+      width: 50px;
+      height: 50px;
+      border: 5px solid transparent;
+      border-top-color: var(--neon-blue);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      position: relative;
+    }
+
+    .loader-circle::before,
+    .loader-circle::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      border: 5px solid transparent;
+    }
+
+    .loader-circle::before {
+      top: 5px;
+      left: 5px;
+      right: 5px;
+      bottom: 5px;
+      border-top-color: var(--neon-purple);
+      animation: spin 2s linear infinite;
+    }
+
+    .loader-circle::after {
+      top: 15px;
+      left: 15px;
+      right: 15px;
+      bottom: 15px;
+      border-top-color: var(--neon-blue);
+      animation: spin 3s linear infinite;
+    }
+
+    .loader-text {
+      margin-top: 1rem;
+      color: var(--neon-blue);
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      animation: pulse 1.5s infinite alternate;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.7; }
+      100% { opacity: 1; }
+    }
+
+    @keyframes underline {
+      0% { transform: scaleX(0); transform-origin: right; }
+      50% { transform: scaleX(1); transform-origin: right; }
+      51% { transform-origin: left; }
+      100% { transform: scaleX(0); transform-origin: left; }
+    }
+
+    @keyframes fadeInUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 1.8rem;
+      }
+      
+      .stats-container {
+        padding: 1.5rem;
+      }
+      
+      .stat-item {
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="loader">
+    <div class="loader-circle"></div>
+    <div class="loader-text">INITIALIZING SYSTEM...</div>
+  </div>
+
+  <div class="parallax-bg" id="parallaxBg"></div>
+
+  <div class="container">
+    <h1>CHUCKY X BOT LIVE STATS</h1>
+    <div class="stats-container">
+      <p class="stat-item">Total Users: <span id="total" class="stat-value">0</span></p>
+      <p class="stat-item">Active Users (30m): <span id="active" class="stat-value">0</span></p>
+      <p class="stat-item">Stopped Users (12h): <span id="stopped" class="stat-value">0</span></p>
+    </div>
+  </div>
+
+  <div class="credits">CREDITS: MARX</div>
+
+  <script>
+    // Create parallax elements
+    function createParallax() {
+      const bg = document.getElementById('parallaxBg');
+      const count = 15;
+      
+      for (let i = 0; i < count; i++) {
+        const element = document.createElement('div');
+        element.classList.add('parallax-element');
+        
+        const size = Math.random() * 100 + 50;
+        const posX = Math.random() * 100;
+        const posY = Math.random() * 100;
+        const delay = Math.random() * 5;
+        
+        element.style.width = `${size}px`;
+        element.style.height = `${size}px`;
+        element.style.left = `${posX}%`;
+        element.style.top = `${posY}%`;
+        element.style.animationDelay = `${delay}s`;
+        
+        bg.appendChild(element);
+      }
+      
+      // Add parallax effect
+      window.addEventListener('mousemove', (e) => {
+        const x = e.clientX / window.innerWidth;
+        const y = e.clientY / window.innerHeight;
+        
+        const elements = document.querySelectorAll('.parallax-element');
+        elements.forEach((el, i) => {
+          const speed = (i + 1) * 0.2;
+          const xMove = x * speed * 100 - 50;
+          const yMove = y * speed * 100 - 50;
+          
+          el.style.transform = `translate(${xMove}px, ${yMove}px)`;
+        });
+      });
+    }
+
+    // Hide loader when page is loaded
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.querySelector('.loader').classList.add('hidden');
+        createParallax();
+      }, 1500);
+    });
+
+    // Original functionality - untouched
+    async function fetchStats() {
+      const res = await fetch('/stats.json');
+      const data = await res.json();
+      const now = Date.now();
+      const users = data.users || {};
+      const total = data.total || 0;
+      let active = 0, stopped = 0;
+
+      for (let jid in users) {
+        const lastSeen = users[jid];
+        if ((now - lastSeen) < (30 * 60 * 1000)) active++;
+        else if ((now - lastSeen) > (12 * 60 * 60 * 1000)) stopped++;
+      }
+
+      document.getElementById('total').innerText = total;
+      document.getElementById('active').innerText = active;
+      document.getElementById('stopped').innerText = stopped;
+      
+      // Add animation to values when they update
+      const values = document.querySelectorAll('.stat-value');
+      values.forEach(value => {
+        value.classList.add('pulse');
+        setTimeout(() => value.classList.remove('pulse'), 500);
+      });
+    }
+
+    fetchStats();
+    setInterval(fetchStats, 5000); // update every 5s
+  </script>
+</body>
+</html>

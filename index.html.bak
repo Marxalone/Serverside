@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chucky X Bot Stats</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Chucky X Bot Live Stats</h1>
+  <p>Total Users: <span id="total"></span></p>
+  <p>Active Users (30m): <span id="active"></span></p>
+  <p>Stopped Users (12h): <span id="stopped"></span></p>
+
+  <script>
+    async function fetchStats() {
+      const res = await fetch('/stats.json');
+      const data = await res.json();
+      const now = Date.now();
+      const users = data.users || {};
+      const total = data.total || 0;
+      let active = 0, stopped = 0;
+
+      for (let jid in users) {
+        const lastSeen = users[jid];
+        if ((now - lastSeen) < (30 * 60 * 1000)) active++;
+        else if ((now - lastSeen) > (12 * 60 * 60 * 1000)) stopped++;
+      }
+
+      document.getElementById('total').innerText = total;
+      document.getElementById('active').innerText = active;
+      document.getElementById('stopped').innerText = stopped;
+    }
+
+    fetchStats();
+    setInterval(fetchStats, 5000); // update every 5s
+  </script>
+</body>
+</html>
